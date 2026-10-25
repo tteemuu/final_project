@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f7f6f3;
+  --surface: #ffffff;
+  --ink: #1d1d1b;
+  --muted: #6b6a66;
+  --line: #e4e2dc;
+  --red: #c8102e;
+  --red-dark: #a30d25;
+  --radius: 12px;
+}
+
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+
+/*Navbar*/
+.navbar { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line); }
+.navbar__inner { max-width: 1120px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 20px; }
+.logo { align-items:left }
+.search { flex: 1; display: flex; align-items: center; gap: 10px; background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 0 16px; color:var (--muted)}
+.search:focus-within { border-color: var(--red); }
+.search input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 10px 0; outline: none; }
+.btn { border: 0; border-radius: 999px; padding: 10px 22px; font-weight: 600; }
+.btn--primary { background: var(--red); color: #fff; }
+.btn--primary:hover { background: var(--red-dark); }
+.actions { display: flex; align-items: center; gap: 6px; }
+.icon-btn { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; color:#000000}
+.icon-btn:hover { background: var(--paper); color: var(--red); }
+.profile { position: relative; }
+.avatar { display: grid; place-items: center; width: 42px; height: 42px; border: 0; border-radius: 50%; background: var(--red); color: #fff; cursor: pointer; font-weight: 700; list-style: none; }
+.avatar::-webkit-details-marker { display: none; }
+.avatar:hover, .profile[open] .avatar { background: var(--red-dark); }
+.profile__menu { position: absolute; top: calc(100% + 10px); right: 0; z-index: 30; display: grid; min-width: 220px; gap: 4px; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: 0 8px 24px rgb(29 29 27 / 12%); }
+.profile__head { display: grid; gap: 3px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.profile__head strong { color: var(--ink); }
+.profile__head span { overflow: hidden; color: var(--muted); font-size: 0.85rem; text-overflow: ellipsis; }
+.profile__menu > a, .profile__menu > button { padding: 10px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.profile__menu > a:hover, .profile__menu > button:hover:not(:disabled) { background: var(--paper); color: var(--red); }
+.profile__menu > button:disabled { color: var(--muted); cursor: wait; }
+.profile__error, .navbar__error { color: var(--red); font-size: 0.8rem; }
+.profile__error { margin: 4px 10px 6px; }
+
+
+/* Banner */
+.banner { position: relative; overflow: hidden; border-radius: 16px; touch-action: pan-y; user-select: none; }
+.banner__track { display: flex; transition: transform 0.45s ease; }
+.banner__slide { flex: 0 0 100%; min-height: 260px; padding: 48px 64px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.banner__slide h2 { font-size: clamp(1.6rem, 4vw, 2.6rem); line-height: 1.1; letter-spacing: -0.02em; max-width: 14em; }
+.banner__slide p { font-size: 1.05rem; opacity: 0.9; max-width: 32em; }
+.banner__arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,0.9); color: var(--ink); display: grid; place-items: center; }
+.banner__arrow--prev { left: 12px; }
+.banner__arrow--next { right: 12px; }
+.banner__dots { position: absolute; bottom: 14px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
+.banner__dots button { width: 8px; height: 8px; padding: 0; border-radius: 99px; border: 0; background: rgba(255,255,255,0.55); transition: width 0.2s; }
+.banner__dots button.is-active { width: 24px; background: #fff; }
