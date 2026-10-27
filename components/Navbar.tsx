@@ -64,9 +64,7 @@ export default function Navbar() {
         throw new Error(data.error || "Unable to sign out.");
       }
 
-      setAuth({ status: "signed-out" });
-      router.push("/");
-      router.refresh();
+      window.location.assign("/");
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Unable to sign out.");
     } finally {

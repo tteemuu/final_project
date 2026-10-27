@@ -28,7 +28,8 @@ export async function GET(request: Request) {
         u.phone_number AS seller_phone,
         u.avg_rating AS seller_rating,
         u.faculty AS seller_faculty,
-        u.campus AS seller_campus
+        u.campus AS seller_campus,
+        u.eKYC_status AS seller_ekyc_status
       FROM listing l
       JOIN user_parent u ON l.seller_id = u.id
       JOIN category c ON l.category_id = c.category_id

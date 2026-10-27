@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Banner from "@/components/Banner";
 
 // Define the shape of the data returned by your API
@@ -21,12 +22,35 @@ interface Listing {
   seller_rating: string;
   seller_faculty: string;
   seller_campus: string;
+  seller_ekyc_status: string;
 }
 
 export default function MainFeed() {
+  const pathname = usePathname();
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch('/api/auth/me', { cache: 'no-store' });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Unable to check your account.');
+        }
+
+        setIsAuthenticated(Boolean(data.authenticated));
+      } catch (error) {
+        setIsAuthenticated(false);
+        console.error(error);
+      }
+    };
+
+    void checkSession();
+  }, [pathname]);
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -118,12 +142,28 @@ export default function MainFeed() {
 
                   <hr className="my-4 border-gray-100" />
 
-                  {/* Seller & Contact Section */}
+                  {isAuthenticated && (
                   <div className="rounded-md bg-gray-50 p-3">
                     <div className="mb-2 flex items-start justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">
+                        <p className="flex items-center gap-1 text-sm font-semibold text-gray-900">
                           {item.seller_name}
+                          {item.seller_ekyc_status?.toLowerCase() === 'verified' && (
+                            <span
+                              className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-green-600 text-white"
+                              role="img"
+                              aria-label="Verified seller"
+                              title="Verified seller"
+                            >
+                              <svg
+                                aria-hidden="true"
+                                viewBox="0 0 16 16"
+                                className="h-3 w-3 fill-none stroke-current stroke-2"
+                              >
+                                <path d="m3.5 8 3 3 6-6" />
+                              </svg>
+                            </span>
+                          )}
                         </p>
                         <p className="text-xs text-gray-500">
                           {item.seller_faculty} • {item.seller_campus}
@@ -135,12 +175,7 @@ export default function MainFeed() {
                     </div>
                     
                     <div className="space-y-1 pt-2">
-                      <a 
-                        href={`mailto:${item.seller_email}`}
-                        className="flex items-center text-sm text-blue-600 hover:underline"
-                      >
-                        ✉️ {item.seller_email}
-                      </a>
+                      
                       <a 
                         href={`tel:${item.seller_phone}`}
                         className="flex items-center text-sm text-green-600 hover:underline"
@@ -149,6 +184,7 @@ export default function MainFeed() {
                       </a>
                     </div>
                   </div>
+                  )}
                 </div>
               </div>
             ))}
