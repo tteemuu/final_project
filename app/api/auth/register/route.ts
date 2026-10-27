@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       `INSERT INTO ekyc_verification
         (regular_id, admin_id, document_url, verification_status)
        VALUES (?, NULL, ?, 'Pending')`,
-      [newUserId, '']
+      [newUserId, '' ]
     );
 
     return NextResponse.json({ message: 'Account created' }, { status: 201 });

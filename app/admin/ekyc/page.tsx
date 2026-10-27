@@ -119,7 +119,7 @@ export default function AdminEkycDashboard() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <a 
-                        href={req.document_url} 
+                        //href={req.document_url} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="inline-block rounded bg-gray-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-600 transition-colors"
