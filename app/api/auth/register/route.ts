@@ -31,8 +31,14 @@ export async function POST(request: Request) {
     // Link to the regular user table
     const newUserId = result.insertId;
     await pool.execute(
-      'INSERT INTO regular (regular_id) VALUES (?)',
-      [newUserId]
+      'INSERT INTO regular (regular_id) VALUES (?)',[newUserId]
+    );
+
+    await pool.execute(
+      `INSERT INTO ekyc_verification
+        (regular_id, admin_id, document_url, verification_status)
+       VALUES (?, NULL, ?, 'Pending')`,
+      [newUserId, '']
     );
 
     return NextResponse.json({ message: 'Account created' }, { status: 201 });
