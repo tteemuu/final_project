@@ -93,7 +93,7 @@ export default function MainFeed() {
       
       <Banner/>
       <div className="mx-auto max-w-7xl">
-        <h1 className="mb-8 text-3xl font-bold text-gray-900">Reccommend Item</h1>
+        <h1 className="mt-8 mb-8 text-3xl font-bold text-gray-900">Reccommend Item</h1>
         
         {listings.length === 0 ? (
           <p className="text-gray-600">No active listings available right now.</p>
