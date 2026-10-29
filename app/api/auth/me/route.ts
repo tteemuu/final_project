@@ -10,6 +10,7 @@ interface SessionRow extends RowDataPacket {
   name: string;
   email: string;
 }
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
