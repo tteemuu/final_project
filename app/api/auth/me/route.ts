@@ -10,11 +10,12 @@ interface SessionRow extends RowDataPacket {
   name: string;
   email: string;
 }
-export const dynamic = "force-dynamic";
+
 
 export async function GET() {
+  const sessionId = (await cookies()).get("session_id")?.value;
   try {
-    const sessionId = (await cookies()).get("session_id")?.value;
+    
 
     if (!sessionId) {
       return NextResponse.json({ authenticated: false });
