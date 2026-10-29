@@ -7,12 +7,11 @@ export async function GET(request: Request) {
   try {
     // Parse URL for optional pagination (e.g., /api/listings?limit=20&page=1)
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50', 10) || 50, 1), 100);
+    const page = Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1);
     const offset = (page - 1) * limit;
-
     // Execute a JOIN query to combine listings with seller and image data
-    const [listings]: any = await pool.execute(
+    const [listings]: any = await pool.query(
       `SELECT 
         l.listing_id, 
         l.title, 
