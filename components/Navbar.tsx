@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { HeartIcon, MessageIcon, ProfileIcon, SearchIcon, SignInIcon } from "./Icons";
+import { authenticatedFetch, clearSessionId } from "@/lib/auth-client";
 
 export default function Navbar() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function Navbar() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        const response = await authenticatedFetch("/api/auth/me", { cache: "no-store" });
         const data = await response.json();
 
         if (!response.ok) {
@@ -57,13 +58,14 @@ export default function Navbar() {
     setAuthError("");
 
     try {
-      const response = await fetch("/api/auth/logout", { method: "POST" });
+      const response = await authenticatedFetch("/api/auth/logout", { method: "POST" });
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || "Unable to sign out.");
       }
 
+      clearSessionId();
       window.location.assign("/");
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Unable to sign out.");

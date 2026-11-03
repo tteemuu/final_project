@@ -1,12 +1,10 @@
 // app/api/admin/listings/route.ts
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import pool from '@/db/db';
 
 // Helper to verify ANY admin role (Moderator OR Super admin)
-async function getAnyAdminSession() {
-  const cookieStore = cookies();
-  const sessionId = (await cookieStore).get('session_id')?.value;
+async function getAnyAdminSession(request: Request) {
+  const sessionId = request.headers.get('x-session-id');
 
   if (!sessionId) return null;
 
@@ -34,9 +32,9 @@ async function getAnyAdminSession() {
 }
 
 // GET: Fetch all marketplace listings for the admin dashboard
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const admin = await getAnyAdminSession();
+    const admin = await getAnyAdminSession(request);
     if (!admin) {
       return NextResponse.json({ error: 'Access Denied. Admin privileges required.' }, { status: 403 });
     }
@@ -60,7 +58,7 @@ export async function GET() {
 // DELETE: Remove a listing by ID
 export async function DELETE(request: Request) {
   try {
-    const admin = await getAnyAdminSession();
+    const admin = await getAnyAdminSession(request);
     if (!admin) {
       return NextResponse.json({ error: 'Access Denied. Admin privileges required.' }, { status: 403 });
     }

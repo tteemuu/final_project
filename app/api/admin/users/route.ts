@@ -1,12 +1,10 @@
 // app/api/admin/users/route.ts
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import pool from '@/db/db';
 
 // Strict helper function to verify Super admin session
-async function getSuperAdminSession() {
-  const cookieStore = cookies();
-  const sessionId = (await cookieStore).get('session_id')?.value;
+async function getSuperAdminSession(request: Request) {
+  const sessionId = request.headers.get('x-session-id');
 
   if (!sessionId) return null;
 
@@ -36,9 +34,9 @@ async function getSuperAdminSession() {
 }
 
 // GET: Fetch all users for the dashboard
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const superAdminId = await getSuperAdminSession();
+    const superAdminId = await getSuperAdminSession(request);
     if (!superAdminId) {
       return NextResponse.json({ error: 'Access Denied. Super admin privileges required.' }, { status: 403 });
     }
@@ -59,7 +57,7 @@ export async function GET() {
 // DELETE: Remove a user by ID
 export async function DELETE(request: Request) {
   try {
-    const superAdminId = await getSuperAdminSession();
+    const superAdminId = await getSuperAdminSession(request);
     if (!superAdminId) {
       return NextResponse.json({ error: 'Access Denied. Super admin privileges required.' }, { status: 403 });
     }

@@ -1,6 +1,5 @@
 // app/api/auth/me/route.ts
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import type { RowDataPacket } from "mysql2";
 import pool from "@/db/db";
 
@@ -11,9 +10,9 @@ interface SessionRow extends RowDataPacket {
   email: string;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const sessionId = (await cookies()).get("session_id")?.value;
+    const sessionId = request.headers.get("x-session-id");
 
     if (!sessionId) {
       return NextResponse.json({ authenticated: false });

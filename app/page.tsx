@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Banner from "@/components/Banner";
+import { authenticatedFetch } from '@/lib/auth-client';
 
 // Define the shape of the data returned by your API
 interface Listing {
@@ -35,7 +36,7 @@ export default function MainFeed() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const response = await fetch('/api/auth/me', { cache: 'no-store' });
+        const response = await authenticatedFetch('/api/auth/me', { cache: 'no-store' });
         const data = await response.json();
 
         if (!response.ok) {

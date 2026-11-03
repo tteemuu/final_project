@@ -1,12 +1,10 @@
 // app/api/admin/ekyc/route.ts
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import pool from '@/db/db';
 
 // Helper function to verify admin session
-async function getAdminSession() {
-  const cookieStore = cookies();
-  const sessionId = (await cookieStore).get('session_id')?.value;
+async function getAdminSession(request: Request) {
+  const sessionId = request.headers.get('x-session-id');
 
   if (!sessionId) return null;
 
@@ -19,14 +17,14 @@ async function getAdminSession() {
     return null;
   }
 
-  return sessionRows[0].user_id;
+  return sessionId;
 }
 
 // GET: Fetch all pending eKYC requests
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const adminId = await getAdminSession();
-    if (!adminId) return NextResponse.json({ error: 'Unauthorized Admin Access' }, { status: 403 });
+    const admin = await getAdminSession(request);
+    if (!admin) return NextResponse.json({ error: 'Unauthorized Admin Access' }, { status: 403 });
 
     // Join ekyc_verification with user_parent to get student details
     const [pendingRequests]: any = await pool.execute(
@@ -56,49 +54,41 @@ export async function GET() {
 // PUT: Accept or Reject an eKYC request
 export async function PUT(request: Request) {
   try {
-    const adminId = await getAdminSession();
-    if (!adminId) return NextResponse.json({ error: 'Unauthorized Admin Access' }, { status: 403 });
+    const admin = await getAdminSession(request);
+    if (!admin) return NextResponse.json({ error: 'Unauthorized Admin Access' }, { status: 403 });
 
     const body = await request.json();
     const { verification_id, action } = body; // action should be 'Accept' or 'Reject'
 
-    if (!verification_id || !action) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const verificationId = Number(verification_id);
+    if (!Number.isInteger(verificationId) || verificationId < 1 || !['Accept', 'Reject'].includes(action)) {
+      return NextResponse.json(
+        { error: 'A valid verification ID and review action are required.' },
+        { status: 400 }
+      );
     }
 
     const newStatus = action === 'Accept' ? 'Verified' : 'Rejected';
 
-    // 1. Find the regular_id associated with this verification
-    const [verifyRows]: any = await pool.execute(
-      'SELECT regular_id FROM ekyc_verification WHERE verification_id = ? AND verification_status = "Pending"',
-      [verification_id]
-    );
-
-    if (verifyRows.length === 0) {
-      return NextResponse.json({ error: 'Verification request not found or already processed' }, { status: 404 });
-    }
-
-    const regular_id = verifyRows[0].regular_id;
-
-    // 2. Update the ekyc_verification table
     await pool.execute(
-      `UPDATE ekyc_verification 
-       SET verification_status = ?, admin_id = ?, resolved_at = NOW() 
-       WHERE verification_id = ?`,
-      [newStatus, adminId, verification_id]
-    );
-
-    // 3. Update the user_parent table
-    await pool.execute(
-      `UPDATE user_parent 
-       SET eKYC_status = ? 
-       WHERE id = ?`,
-      [newStatus, regular_id]
+      'CALL process_ekyc_review(?, ?, ?)',
+      [admin, verificationId, newStatus]
     );
 
     return NextResponse.json({ message: `User eKYC ${newStatus} successfully` }, { status: 200 });
   } catch (error) {
     console.error('Error processing eKYC:', error);
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ER_SIGNAL_EXCEPTION' &&
+      'sqlMessage' in error &&
+      typeof error.sqlMessage === 'string'
+    ) {
+      const status = error.sqlMessage.includes('Pending eKYC request was not found') ? 404 : 403;
+      return NextResponse.json({ error: error.sqlMessage }, { status });
+    }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -2,12 +2,9 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function RegisterPage() {
-  const router = useRouter();
-  
   // Form state matching your database schema
   const [formData, setFormData] = useState({
     student_id: '',
@@ -21,6 +18,7 @@ export default function RegisterPage() {
   });
 
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -30,6 +28,7 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     
     // Client-side validation matching backend rules
     if (!formData.email.endsWith('@dome.tu.ac.th')) {
@@ -53,8 +52,17 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // Redirect to login page so the user can test their new hashed password
-        router.push('/login');
+        setFormData({
+          student_id: '',
+          username: '',
+          password: '',
+          name: '',
+          phone_number: '',
+          email: '',
+          faculty: '',
+          campus: 'Rangsit Center',
+        });
+        setSuccess('Account created successfully. You can now sign in.');
       } else {
         setError(data.error || 'Registration failed');
       }
@@ -77,8 +85,13 @@ export default function RegisterPage() {
             {error}
           </div>
         )}
+        {success && (
+          <div className="mb-4 rounded bg-green-100 p-3 text-sm text-green-700" role="status">
+            {success}
+          </div>
+        )}
 
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form onSubmit={handleRegister} className="space-y-4" noValidate>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">Full Name</label>

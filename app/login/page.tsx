@@ -4,6 +4,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { storeSessionId } from '@/lib/auth-client';
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -29,9 +31,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // Redirect to the home page or dashboard on success
+        if (typeof data.sessionId !== 'string') {
+          throw new Error('Login succeeded but no session was returned.');
+        }
+        storeSessionId(data.sessionId);
         router.push('/');
-        router.refresh(); // Refresh to apply session state
+        router.refresh();
 
       } else {
         // Display the error returned from the backend (e.g., wrong password, invalid email)
@@ -57,7 +62,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4" noValidate>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="email">
               University Email

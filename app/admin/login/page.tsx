@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { storeSessionId } from '@/lib/auth-client';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -26,6 +27,10 @@ export default function AdminLoginPage() {
       const data = await res.json();
 
       if (res.ok) {
+        if (typeof data.sessionId !== 'string') {
+          throw new Error('Login succeeded but no session was returned.');
+        }
+        storeSessionId(data.sessionId);
         router.push('/'); 
         router.refresh();
       } else {
@@ -54,7 +59,7 @@ export default function AdminLoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleAdminLogin} className="space-y-5">
+        <form onSubmit={handleAdminLogin} className="space-y-5" noValidate >
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-300" htmlFor="email">
               Admin Email

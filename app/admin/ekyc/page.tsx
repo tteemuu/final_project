@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { authenticatedFetch } from '@/lib/auth-client';
 
 interface EkycRequest {
   verification_id: number;
@@ -27,7 +28,7 @@ export default function AdminEkycDashboard() {
 
   const fetchRequests = async () => {
     try {
-      const res = await fetch('/api/admin/ekyc');
+      const res = await authenticatedFetch('/api/admin/ekyc');
       if (!res.ok) throw new Error('Failed to load pending requests. Ensure you are logged in as Admin.');
       
       const data = await res.json();
@@ -45,7 +46,7 @@ export default function AdminEkycDashboard() {
     setProcessingId(verification_id);
     
     try {
-      const res = await fetch('/api/admin/ekyc', {
+      const res = await authenticatedFetch('/api/admin/ekyc', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ verification_id, action }),

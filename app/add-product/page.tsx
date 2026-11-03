@@ -2,6 +2,7 @@
 "use client";
 
 import { useRef, useState } from 'react';
+import { authenticatedFetch } from '@/lib/auth-client';
 
 export default function AddProductPage() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -69,7 +70,7 @@ export default function AddProductPage() {
       }
 
       // Step 2: Submit the product data with the newly generated image URL
-      const res = await fetch('/api/listings', {
+      const res = await authenticatedFetch('/api/listings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -122,7 +123,7 @@ export default function AddProductPage() {
           </div>
         )}
 
-        <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
+        <form ref={formRef} onSubmit={handleSubmit}  className="space-y-5" noValidate>
           {/* File Upload Section */}
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Product Image</label>

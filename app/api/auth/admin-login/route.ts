@@ -1,9 +1,18 @@
 // app/api/auth/admin-login/route.ts
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
+import type { RowDataPacket } from 'mysql2';
 import pool from '@/db/db';
+import { createSession } from '@/db/session';
+
+interface LoginUserRow extends RowDataPacket {
+  id: number;
+  password: string;
+}
+
+interface AdminRoleRow extends RowDataPacket {
+  admin_role: string;
+}
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     // Step 1: Find the user
-    const [rows]: any = await pool.execute(
+    const [rows] = await pool.execute<LoginUserRow[]>(
       'SELECT id, password FROM user_parent WHERE email = ?',
       [email]
     );
@@ -28,7 +37,7 @@ export async function POST(request: Request) {
     }
 
     // Step 3: STRICT ADMIN CHECK - Reject if the user is not in the admin table
-    const [adminRows]: any = await pool.execute(
+    const [adminRows] = await pool.execute<AdminRoleRow[]>(
       'SELECT admin_role FROM admin WHERE admin_id = ?',
       [user.id]
     );
@@ -37,27 +46,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Access denied. Admin privileges required.' }, { status: 403 });
     }
 
-    // Step 4: Generate Session
-    const sessionId = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    const formattedExpiresAt = expiresAt.toISOString().slice(0, 19).replace('T', ' ');
-
-    await pool.execute(
-      'INSERT INTO session (session_id, user_id, role, expires_at) VALUES (?, ?, ?, ?)',
-      [sessionId, user.id, 'Admin', formattedExpiresAt]
-    );
-
-    (await cookies()).set('session_id', sessionId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      expires: expiresAt,
-      path: '/',
-      sameSite: 'lax',
-    });
+    const { sessionId } = await createSession(user.id, 'Admin');
 
     return NextResponse.json({ 
       message: 'Admin login successful', 
-      admin_role: adminRows[0].admin_role 
+      admin_role: adminRows[0].admin_role,
+      sessionId,
     }, { status: 200 });
 
   } catch (error) {

@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { authenticatedFetch } from '@/lib/auth-client';
 
 interface User {
   id: number;
@@ -28,7 +29,7 @@ export default function UserManagementDashboard() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('/api/admin/users');
+      const res = await authenticatedFetch('/api/admin/users');
       const data = await res.json();
       
       if (!res.ok) throw new Error(data.error || 'Failed to load users');
@@ -54,7 +55,7 @@ export default function UserManagementDashboard() {
     setError('');
 
     try {
-      const res = await fetch(`/api/admin/users?id=${userId}`, {
+      const res = await authenticatedFetch(`/api/admin/users?id=${userId}`, {
         method: 'DELETE',
       });
       

@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import pool from "@/db/db";
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const sessionId = cookieStore.get("session_id")?.value;
+    const sessionId = request.headers.get("x-session-id");
 
     if (sessionId) {
       await pool.execute("DELETE FROM session WHERE session_id = ?", [sessionId]);
     }
 
-    cookieStore.delete("session_id");
     return NextResponse.json({ message: "Signed out" });
   } catch (error) {
     console.error("Error signing out:", error);

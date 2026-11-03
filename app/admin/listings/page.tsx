@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { authenticatedFetch } from '@/lib/auth-client';
 
 interface AdminListing {
   listing_id: number;
@@ -26,7 +27,7 @@ export default function AdminListingsDashboard() {
 
   const fetchListings = async () => {
     try {
-      const res = await fetch('/api/admin/listings');
+      const res = await authenticatedFetch('/api/admin/listings');
       const data = await res.json();
       
       if (!res.ok) throw new Error(data.error || 'Failed to load listings');
@@ -51,7 +52,7 @@ export default function AdminListingsDashboard() {
     setError('');
 
     try {
-      const res = await fetch(`/api/admin/listings?id=${listingId}`, {
+      const res = await authenticatedFetch(`/api/admin/listings?id=${listingId}`, {
         method: 'DELETE',
       });
       

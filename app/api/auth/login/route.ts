@@ -1,9 +1,18 @@
 // app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
+import type { RowDataPacket } from 'mysql2';
 import pool from '@/db/db';
+import { createSession } from '@/db/session';
+
+interface LoginUserRow extends RowDataPacket {
+  id: number;
+  password: string;
+}
+
+interface AdminIdRow extends RowDataPacket {
+  admin_id: number;
+}
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +29,7 @@ export async function POST(request: Request) {
     }
 
     // Step 2: Query the user_parent table using parameterized queries to prevent SQL injection[cite: 4, 5]
-    const [rows]: any = await pool.execute(
+    const [rows] = await pool.execute<LoginUserRow[]>(
       'SELECT id, password FROM user_parent WHERE email = ?', 
       [email]
     );
@@ -37,36 +46,16 @@ export async function POST(request: Request) {
     }
 
     // Step 5: Determine user role (Admin or Regular) to fulfill the session table's role ENUM
-    const [adminRows]: any = await pool.execute(
+    const [adminRows] = await pool.execute<AdminIdRow[]>(
       'SELECT admin_id FROM admin WHERE admin_id = ?', 
       [user.id]
     );
     const role = adminRows.length > 0 ? 'Admin' : 'Regular';
 
-    // Step 6: Generate session ID and expiration time
-    const sessionId = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    const formattedExpiresAt = expiresAt.toISOString().slice(0, 19).replace('T', ' ');
-
-    // Step 7: Insert the session record using parameterized placeholders
-    await pool.execute(
-      'INSERT INTO session (session_id, user_id, role, expires_at) VALUES (?, ?, ?, ?)',
-      [sessionId, user.id, role, formattedExpiresAt]
-    );
-
-    // Step 8: Set an HTTP-only secure cookie for the session
-    (await
-          // Step 8: Set an HTTP-only secure cookie for the session
-          cookies()).set('session_id', sessionId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      expires: expiresAt,
-      path: '/',
-      sameSite: 'lax',
-    });
+    const { sessionId } = await createSession(user.id, role);
 
     // Never send the password hash back in the response payload[cite: 4]
-    return NextResponse.json({ message: 'Login successful', role: role }, { status: 200 });
+    return NextResponse.json({ message: 'Login successful', role, sessionId }, { status: 200 });
 
   } catch (error) {
     console.error('Login Error:', error);

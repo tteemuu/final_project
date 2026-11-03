@@ -1,7 +1,6 @@
 // app/api/listings/route.ts
 import { NextResponse } from 'next/server';
 import pool from '@/db/db';
-import { cookies } from 'next/headers';
 
 export async function GET(request: Request) {
   try {
@@ -59,9 +58,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    // 1. Authenticate the User using the session cookie
-    const cookieStore = cookies();
-    const sessionId = (await cookieStore).get('session_id')?.value;
+    // Authenticate the user with the session token scoped to this browser tab.
+    const sessionId = request.headers.get('x-session-id');
 
     if (!sessionId) {
       return NextResponse.json({ error: 'Unauthorized. Please log in.' }, { status: 401 });
